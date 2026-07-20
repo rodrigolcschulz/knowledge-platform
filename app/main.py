@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from openai import OpenAIError
 from psycopg import Error as PsycopgError
 
 from app.document_ingestion import ingest_documents
@@ -111,7 +112,11 @@ def chat_endpoint(payload: ChatRequest) -> ChatResponse:
             citations=[],
         )
 
-    answer = generate_answer(payload.question, rows)
+    try:
+        answer = generate_answer(payload.question, rows)
+    except OpenAIError as exc:
+        raise HTTPException(status_code=503, detail=f"LLM provider unavailable: {exc}") from exc
+
     citations = [
         RetrievedChunk(
             chunk_id=item["chunk_id"],
