@@ -41,7 +41,7 @@ def _post_json(path: str, payload: dict[str, Any]) -> tuple[dict[str, Any] | Non
         return None, f"Resposta invalida da API: {exc}"
 
 
-def run_ingest(input_path: str, chunk_size: int, chunk_overlap: int) -> tuple[str, str]:
+def run_ingest(input_path: str, chunk_size: int, chunk_overlap: int) -> str:
     payload: dict[str, Any] = {
         "input_path": input_path,
         "patterns": ["*.pdf", "*.txt", "*.md", "*.markdown"],
@@ -52,7 +52,7 @@ def run_ingest(input_path: str, chunk_size: int, chunk_overlap: int) -> tuple[st
 
     data, err = _post_json("/ingest/documents", payload)
     if err:
-        return err, ""
+        return err
 
     summary = (
         "Ingestao concluida com sucesso\n"
@@ -60,14 +60,14 @@ def run_ingest(input_path: str, chunk_size: int, chunk_overlap: int) -> tuple[st
         f"Documentos indexados: {data.get('indexed_documents')}\n"
         f"Chunks indexados: {data.get('indexed_chunks')}"
     )
-    return summary, json.dumps(data, ensure_ascii=False, indent=2)
+    return summary
 
 
-def run_search(query: str, top_k: int) -> tuple[list[list[Any]], str]:
+def run_search(query: str, top_k: int) -> list[list[Any]]:
     payload = {"query": query, "top_k": int(top_k)}
     data, err = _post_json("/search", payload)
     if err:
-        return [], err
+        return []
 
     rows = []
     for item in data.get("results", []):
@@ -81,14 +81,14 @@ def run_search(query: str, top_k: int) -> tuple[list[list[Any]], str]:
             ]
         )
 
-    return rows, json.dumps(data, ensure_ascii=False, indent=2)
+    return rows
 
 
-def run_chat(question: str, top_k: int) -> tuple[str, list[list[Any]], str]:
+def run_chat(question: str, top_k: int) -> tuple[str, list[list[Any]]]:
     payload = {"question": question, "top_k": int(top_k)}
     data, err = _post_json("/chat", payload)
     if err:
-        return err, [], ""
+        return err, []
 
     citations = []
     for item in data.get("citations", []):
@@ -101,11 +101,7 @@ def run_chat(question: str, top_k: int) -> tuple[str, list[list[Any]], str]:
             ]
         )
 
-    return (
-        data.get("answer", ""),
-        citations,
-        json.dumps(data, ensure_ascii=False, indent=2),
-    )
+    return data.get("answer", ""), citations
 
 
 with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
@@ -120,12 +116,11 @@ with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
         ingest_chunk_overlap = gr.Slider(0, 1000, value=150, step=25, label="Chunk overlap")
         ingest_button = gr.Button("Ingerir documentos", variant="primary")
         ingest_summary = gr.Textbox(label="Resumo", lines=5)
-        ingest_json = gr.Code(label="Resposta JSON", language="json")
 
         ingest_button.click(
             fn=run_ingest,
             inputs=[ingest_input_path, ingest_chunk_size, ingest_chunk_overlap],
-            outputs=[ingest_summary, ingest_json],
+            outputs=[ingest_summary],
             queue=False,
         )
 
@@ -139,12 +134,11 @@ with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
             wrap=True,
             label="Resultados",
         )
-        search_json = gr.Code(label="Resposta JSON", language="json")
 
         search_button.click(
             fn=run_search,
             inputs=[search_query, search_top_k],
-            outputs=[search_table, search_json],
+            outputs=[search_table],
             queue=False,
         )
 
@@ -155,19 +149,18 @@ with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
         )
         chat_top_k = gr.Slider(1, 20, value=5, step=1, label="Top K")
         chat_button = gr.Button("Perguntar", variant="primary")
-        chat_answer = gr.Textbox(label="Resposta", lines=8)
+        chat_answer = gr.Textbox(label="Resposta", lines=12, max_lines=12)
         chat_citations = gr.Dataframe(
             headers=["chunk_id", "source", "row_index", "score"],
             datatype=["number", "str", "number", "number"],
             wrap=True,
             label="Citacoes",
         )
-        chat_json = gr.Code(label="Resposta JSON", language="json")
 
         chat_button.click(
             fn=run_chat,
             inputs=[chat_question, chat_top_k],
-            outputs=[chat_answer, chat_citations, chat_json],
+            outputs=[chat_answer, chat_citations],
             queue=False,
         )
 

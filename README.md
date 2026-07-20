@@ -178,10 +178,11 @@ A interface ficara em `http://127.0.0.1:7860`.
 ## UI para demo
 
 - Arquivo: `ui_gradio.py`
+- A UI de demo exibe apenas os resultados principais (sem painel de resposta JSON).
 - Fluxo recomendado:
 	1. Ingerir documentos na aba **Ingest Documents**
   1. Validar resultados na aba **Search**
-  1. Fazer perguntas na aba **Chat**
+	1. Fazer perguntas na aba **Chat** (resposta com rolagem + tabela de citacoes)
 
 ## Exemplos de uso
 
@@ -264,7 +265,7 @@ docker compose logs -f api ui
 
 ### Sobre o indicador de queue no Gradio
 
-- O chat atualiza 3 componentes na mesma acao (resposta, citacoes e JSON), por isso pode parecer que existem varias filas.
+- O chat atualiza 2 componentes na mesma acao (resposta e citacoes), por isso pode parecer que existem varias filas.
 - Nesta demo, as acoes de botoes foram configuradas com `queue=False` para evitar esse comportamento visual de fila.
 
 ## Install
