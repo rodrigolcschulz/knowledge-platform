@@ -8,6 +8,7 @@ import gradio as gr
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 GRADIO_SERVER_NAME = os.getenv("GRADIO_SERVER_NAME", "127.0.0.1")
 GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", "7860"))
+API_TIMEOUT_SECONDS = float(os.getenv("API_TIMEOUT_SECONDS", "900"))
 DEFAULT_INPUT_PATH = "input"
 
 
@@ -22,7 +23,7 @@ def _post_json(path: str, payload: dict[str, Any]) -> tuple[dict[str, Any] | Non
     )
 
     try:
-        with request.urlopen(req, timeout=120) as response:
+        with request.urlopen(req, timeout=API_TIMEOUT_SECONDS) as response:
             data = response.read().decode("utf-8")
             parsed = json.loads(data) if data else {}
             return parsed, None
@@ -32,7 +33,10 @@ def _post_json(path: str, payload: dict[str, Any]) -> tuple[dict[str, Any] | Non
     except error.URLError as exc:
         return None, f"Falha de conexao com API em {API_BASE_URL}: {exc.reason}"
     except TimeoutError:
-        return None, "Timeout ao chamar API."
+        return None, (
+            "Timeout ao chamar API. "
+            f"Ajuste API_TIMEOUT_SECONDS (atual: {API_TIMEOUT_SECONDS:g}s) se a ingestao demorar mais."
+        )
     except json.JSONDecodeError as exc:
         return None, f"Resposta invalida da API: {exc}"
 
@@ -110,10 +114,11 @@ with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
         "Interface simples para ingestao de PDF/TXT/MD, busca semantica e chat usando a API FastAPI."
     )
     gr.Markdown(f"API alvo: {API_BASE_URL}")
+    gr.Markdown(f"Timeout de chamada API: {API_TIMEOUT_SECONDS:g}s")
 
     with gr.Tab("1) Ingest Documents"):
         ingest_input_path = gr.Textbox(value=DEFAULT_INPUT_PATH, label="Pasta ou arquivo de entrada")
-        ingest_prefer_docling = gr.Checkbox(value=True, label="Preferir Docling para PDF/DOCX")
+        ingest_prefer_docling = gr.Checkbox(value=False, label="Preferir Docling para PDF/DOCX")
         ingest_chunk_size = gr.Slider(300, 3000, value=1200, step=50, label="Chunk size")
         ingest_chunk_overlap = gr.Slider(0, 1000, value=150, step=25, label="Chunk overlap")
         ingest_button = gr.Button("Ingerir documentos", variant="primary")

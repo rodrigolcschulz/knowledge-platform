@@ -6,6 +6,9 @@ from pypdf import PdfReader
 from app.embeddings import embedding_service
 from app.vectorstore import ensure_schema, insert_chunk, reset_source
 
+_DOCLING_CONVERTER: Any | None = None
+_DOCLING_UNAVAILABLE = False
+
 
 def _extract_pdf_text(path: Path) -> str:
     reader = PdfReader(str(path))
@@ -24,14 +27,23 @@ def _extract_text_like(path: Path) -> str:
 
 def _extract_with_docling(path: Path) -> str:
     # Optional dependency path for richer PDF/DOCX conversion when available.
-    try:
-        from docling.document_converter import DocumentConverter
-    except Exception:
+    global _DOCLING_CONVERTER
+    global _DOCLING_UNAVAILABLE
+
+    if _DOCLING_UNAVAILABLE:
         return ""
 
     try:
-        converter = DocumentConverter()
-        result = converter.convert(str(path))
+        if _DOCLING_CONVERTER is None:
+            from docling.document_converter import DocumentConverter
+
+            _DOCLING_CONVERTER = DocumentConverter()
+    except Exception:
+        _DOCLING_UNAVAILABLE = True
+        return ""
+
+    try:
+        result = _DOCLING_CONVERTER.convert(str(path))
         doc = result.document
         markdown = doc.export_to_markdown()
         return (markdown or "").strip()

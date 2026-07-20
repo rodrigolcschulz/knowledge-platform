@@ -30,6 +30,8 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "8000:8000"
+    volumes:
+      - ./input:/app/input:ro
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   ui:
@@ -41,6 +43,7 @@ services:
       - api
     environment:
       API_BASE_URL: http://api:8000
+      API_TIMEOUT_SECONDS: 900
       GRADIO_SERVER_NAME: 0.0.0.0
       GRADIO_SERVER_PORT: 7860
     ports:
