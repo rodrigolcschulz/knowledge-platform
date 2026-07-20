@@ -215,6 +215,58 @@ curl -X POST "http://127.0.0.1:8000/chat" ^
 - Com `OPENAI_API_KEY`, a resposta gerativa usa o modelo definido em `OPENAI_MODEL`.
 - Proximo passo natural: adicionar chunking por schema semantico + reranker para aumentar a precisao.
 
+## Operacao e limpeza de ambiente (Docker)
+
+### Parar e subir servicos
+
+```bash
+docker compose down
+docker compose up -d --build api ui
+```
+
+### Limpar dados antigos indexados no banco
+
+Mesmo removendo arquivos de `input`, os chunks antigos continuam no PostgreSQL (volume persistente). Para resetar apenas os dados indexados:
+
+```bash
+docker compose up -d postgres
+docker compose exec postgres psql -U postgres -d knowledge_platform -c "TRUNCATE TABLE rag_chunks RESTART IDENTITY;"
+```
+
+Depois, suba API/UI novamente:
+
+```bash
+docker compose up -d --build api ui
+```
+
+### Reset total (incluindo volume do Postgres)
+
+```bash
+docker compose down -v --remove-orphans
+docker compose up -d --build
+```
+
+## Troubleshooting da UI
+
+### Chat travado em fila
+
+Se a UI mostrar requisicao pendente por muito tempo, reinicie os servicos:
+
+```bash
+docker compose restart api ui
+```
+
+Se necessario, acompanhe logs:
+
+```bash
+docker compose logs -f api ui
+```
+
+### Sobre o indicador de queue no Gradio
+
+- O chat atualiza 3 componentes na mesma acao (resposta, citacoes e JSON), por isso pode parecer que existem varias filas.
+- Nesta demo, as acoes de botoes foram configuradas com `queue=False` para evitar esse comportamento visual de fila.
+
 ## Install
 
 ```bash

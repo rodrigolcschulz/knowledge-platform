@@ -51,7 +51,7 @@ class IngestResponse(BaseModel):
 class IngestDocumentsRequest(BaseModel):
     input_path: str = "input"
     patterns: list[str] | None = None
-    prefer_docling: bool = False
+    prefer_docling: bool = True
     chunk_size: int = Field(default=1200, ge=200, le=5000)
     chunk_overlap: int = Field(default=150, ge=0, le=1000)
 

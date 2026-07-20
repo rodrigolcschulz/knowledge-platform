@@ -41,11 +41,11 @@ def _post_json(path: str, payload: dict[str, Any]) -> tuple[dict[str, Any] | Non
         return None, f"Resposta invalida da API: {exc}"
 
 
-def run_ingest(input_path: str, prefer_docling: bool, chunk_size: int, chunk_overlap: int) -> tuple[str, str]:
+def run_ingest(input_path: str, chunk_size: int, chunk_overlap: int) -> tuple[str, str]:
     payload: dict[str, Any] = {
         "input_path": input_path,
         "patterns": ["*.pdf", "*.txt", "*.md", "*.markdown"],
-        "prefer_docling": bool(prefer_docling),
+        "prefer_docling": True,
         "chunk_size": int(chunk_size),
         "chunk_overlap": int(chunk_overlap),
     }
@@ -113,12 +113,9 @@ with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
         "# Knowledge Platform - Demo Documents\n"
         "Interface simples para ingestao de PDF/TXT/MD, busca semantica e chat usando a API FastAPI."
     )
-    gr.Markdown(f"API alvo: {API_BASE_URL}")
-    gr.Markdown(f"Timeout de chamada API: {API_TIMEOUT_SECONDS:g}s")
 
     with gr.Tab("1) Ingest Documents"):
         ingest_input_path = gr.Textbox(value=DEFAULT_INPUT_PATH, label="Pasta ou arquivo de entrada")
-        ingest_prefer_docling = gr.Checkbox(value=False, label="Preferir Docling para PDF/DOCX")
         ingest_chunk_size = gr.Slider(300, 3000, value=1200, step=50, label="Chunk size")
         ingest_chunk_overlap = gr.Slider(0, 1000, value=150, step=25, label="Chunk overlap")
         ingest_button = gr.Button("Ingerir documentos", variant="primary")
@@ -127,8 +124,9 @@ with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
 
         ingest_button.click(
             fn=run_ingest,
-            inputs=[ingest_input_path, ingest_prefer_docling, ingest_chunk_size, ingest_chunk_overlap],
+            inputs=[ingest_input_path, ingest_chunk_size, ingest_chunk_overlap],
             outputs=[ingest_summary, ingest_json],
+            queue=False,
         )
 
     with gr.Tab("2) Search"):
@@ -147,6 +145,7 @@ with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
             fn=run_search,
             inputs=[search_query, search_top_k],
             outputs=[search_table, search_json],
+            queue=False,
         )
 
     with gr.Tab("3) Chat"):
@@ -169,6 +168,7 @@ with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
             fn=run_chat,
             inputs=[chat_question, chat_top_k],
             outputs=[chat_answer, chat_citations, chat_json],
+            queue=False,
         )
 
 
