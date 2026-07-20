@@ -338,22 +338,6 @@ API-->>User: Response with citations
 
 ---
 
-# Future Improvements
-
-- Hybrid Search (BM25 + Vector)
-- Multi-tenant support
-- Incremental indexing
-- Streaming responses
-- Langfuse integration
-- OpenTelemetry
-- Redis semantic cache
-- MCP document connector
-- OCR support
-- Image embeddings
-- Multi-modal RAG
-
----
-
 # License
 
 MIT
