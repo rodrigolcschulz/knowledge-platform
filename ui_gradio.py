@@ -104,7 +104,19 @@ def run_chat(question: str, top_k: int) -> tuple[str, list[list[Any]]]:
     return data.get("answer", ""), citations
 
 
-with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
+with gr.Blocks(
+        title="Knowledge Platform - Documents RAG Demo",
+        css="""
+        .chat-answer {
+            max-height: 320px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            background: #ffffff;
+        }
+        """,
+) as demo:
     gr.Markdown(
         "# Knowledge Platform - Demo Documents\n"
         "Interface simples para ingestao de PDF/TXT/MD, busca semantica e chat usando a API FastAPI."
@@ -149,7 +161,8 @@ with gr.Blocks(title="Knowledge Platform - Documents RAG Demo") as demo:
         )
         chat_top_k = gr.Slider(1, 20, value=5, step=1, label="Top K")
         chat_button = gr.Button("Perguntar", variant="primary")
-        chat_answer = gr.Textbox(label="Resposta", lines=12, max_lines=12)
+        gr.Markdown("**Resposta**")
+        chat_answer = gr.Markdown(value="", elem_classes=["chat-answer"])
         chat_citations = gr.Dataframe(
             headers=["chunk_id", "source", "row_index", "score"],
             datatype=["number", "str", "number", "number"],
