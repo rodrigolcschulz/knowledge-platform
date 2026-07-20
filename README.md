@@ -2,6 +2,8 @@
 
 MVP de plataforma RAG com foco em documentos (PDF, TXT e MD), usando FastAPI + PostgreSQL/pgvector.
 
+https://github.com/user-attachments/assets/9f5dcbb6-637a-4890-9d17-75c75965336f
+
 ## Status atual
 
 Este repositório ja possui uma primeira versao funcional com:
